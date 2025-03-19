@@ -61,7 +61,7 @@ export const isReportSafeAfterRemovingAnyOne = (report: number[]) => {
  * - Pas de doublons
  * - Pas de sauts interdits (> 3)
  */
-export const isReportSafe = (report) => {
+export const isReportSafe = (report: number[]) => {
   const reportJoined = report.join();
 
   const sortedAsc = [...report].sort((a, b) => a - b);
