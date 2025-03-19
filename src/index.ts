@@ -47,7 +47,7 @@ export const hasReportForbiddenJumps = (report: number[]) => {
  * Et que le report est valide:
  * Alors on renvoi vrai et cela signifie que le rapport est safe-able en supprimant un level
  */
-export const isReportSafeAfterCleaning = (report: number[]) => {
+export const isReportSafeAfterRemovingAnyOne = (report: number[]) => {
   return report.some((level, index) => {
     const copyReport = [...report];
     copyReport.splice(index, 1);
@@ -82,7 +82,7 @@ export const isReportSafe = (report) => {
 const countSafeReports = (reports: number[][]) => {
   return reports.filter((report) => {
     if (!isReportSafe(report)) {
-      return TOLERANCE && isReportSafeAfterCleaning(report);
+      return TOLERANCE && isReportSafeAfterRemovingAnyOne(report);
     }
     return isReportSafe(report);
   }).length;

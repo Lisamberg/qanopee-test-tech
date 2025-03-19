@@ -1,7 +1,7 @@
 import {
   hasReportForbiddenJumps,
   isReportSafe,
-  isReportSafeAfterCleaning,
+  isReportSafeAfterRemovingAnyOne,
 } from '.';
 
 describe('Forbidden jumps detection', () => {
@@ -44,16 +44,20 @@ describe('Safe / unsafe report detection', () => {
 
 describe('Safe-able / unsafe-able report detection', () => {
   it('Returns boolean that tells if the report is safe-able or not by removing one level', () => {
-    expect(isReportSafeAfterCleaning([1, 2, 7, 5, 9])).toEqual(false);
+    expect(isReportSafeAfterRemovingAnyOne([1, 2, 7, 5, 9])).toEqual(false);
 
-    expect(isReportSafeAfterCleaning([68, 69, 70, 72, 76])).toEqual(true);
+    expect(isReportSafeAfterRemovingAnyOne([68, 69, 70, 72, 76])).toEqual(true);
 
-    expect(isReportSafeAfterCleaning([44, 40, 39, 38, 37, 36])).toEqual(true);
+    expect(isReportSafeAfterRemovingAnyOne([44, 40, 39, 38, 37, 36])).toEqual(
+      true,
+    );
 
-    expect(isReportSafeAfterCleaning([43, 40, 44, 38, 37, 36])).toEqual(true);
+    expect(isReportSafeAfterRemovingAnyOne([43, 40, 44, 38, 37, 36])).toEqual(
+      true,
+    );
 
-    expect(isReportSafeAfterCleaning([70, 66, 69, 68, 67])).toEqual(true);
+    expect(isReportSafeAfterRemovingAnyOne([70, 66, 69, 68, 67])).toEqual(true);
 
-    expect(isReportSafeAfterCleaning([7, 4, 7, 8, 9])).toEqual(true);
+    expect(isReportSafeAfterRemovingAnyOne([7, 4, 7, 8, 9])).toEqual(true);
   });
 });
