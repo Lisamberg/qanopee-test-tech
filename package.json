@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "jest ./src/index.spec.ts",
-    "start": "ts-node ./src/index.ts"
+    "start-challenge-2": "TOLERANCE=1 ts-node ./src/index.ts",
+    "start-challenge-1": "TOLERANCE=0 ts-node ./src/index.ts"
   },
   "keywords": [],
   "author": "",

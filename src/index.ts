@@ -1,97 +1,93 @@
 import * as fs from 'fs';
 
 const MAX_INCREASE = 3;
+const TOLERANCE = Number.parseInt(process.env.TOLERANCE);
 
-export enum WAY {
-  ASC = 'ASC',
-  DESC = 'DESC',
-}
+export const getReportsFromInputFile = () => {
+  const file: string = fs.readFileSync(`${__dirname}/input.txt`, 'utf8');
+  const stringReports = file.split('\n');
 
-//Utilisation d'un set pour réduire les doublons
-//Comparaison de la taille avec l'original par la suite pour déduire l'information
-export const reportContainsDuplicateNumbers = (report: number[]): boolean =>
-  new Set(report).size !== report.length;
+  //Suppression de la dernière ligne du fichier
+  if (stringReports[stringReports.length - 1] === '') {
+    stringReports.pop();
+  }
 
-//Glaner le sens inc/dec en comparant le premier et le dernier level
-export const getReportWay = (report: number[]): WAY => {
-  const first = report[0];
-  const last = report[report.length - 1];
-  return first - last > 0 ? WAY.DESC : WAY.ASC;
+  const reports = stringReports.map((report) =>
+    report.split(' ').map((stringLevel) => Number.parseInt(stringLevel)),
+  );
+
+  return reports;
 };
 
-//Trie et  une copie du report selon le sens passé en arg  et la retourne
-const getSortedReport = (report: number[], way: WAY) => {
-  const asc = (a: number, b: number) => a - b;
-  const desc = (a: number, b: number) => b - a;
-
-  const waySortingFn = way === WAY.ASC ? asc : desc;
-
-  const copy = [...report];
-  return copy.sort(waySortingFn);
-};
-
-//S'assurer du full increasing / decreasing du report
-//Via une comparaison de liste trié vs original
-export const isReportOneWay = (
-  originalReport: number[],
-  sortedReport: number[],
-): boolean => {
-  return originalReport.join() === sortedReport.join();
-};
-
-//Compare chaque level d'un report ordonné avec son suivant
-//Le suivant doit respecter la régle d'une différence de 3 (+/-) max.
-export const doLevelsRespectsMaxIncrease = (levels: number[]) => {
-  return levels.every((level, index) => {
+/**
+ * Detection d'un saut interdit entre 2 levels (> 3)
+ * @param report number[]
+ * @returns
+ */
+export const hasReportForbiddenJumps = (report: number[]) => {
+  return report.some((level, index, levels) => {
     const next = levels[index + 1];
 
     if (!next) {
-      return true;
+      return false;
     }
 
     const comparison = level - next;
+    const isJumpForbidden =
+      comparison > MAX_INCREASE || comparison < -MAX_INCREASE;
 
-    return comparison >= -MAX_INCREASE && comparison <= MAX_INCREASE;
+    return isJumpForbidden;
   });
 };
 
-//C'est ici que toutes nos problématiques sous découpés s'emboitent
+/**
+ * Cette fonction effectue le test suivant:
+ * Pour chaque élément de la list:
+ * Si je le supprime du repport et que j'effectue un isValid
+ * Et que le report est valide:
+ * Alors on renvoi vrai et cela signifie que le rapport est safe-able en supprimant un level
+ */
+export const isReportSafeAfterCleaning = (report: number[]) => {
+  return report.some((level, index) => {
+    const copyReport = [...report];
+    copyReport.splice(index, 1);
+    return isReportSafe(copyReport);
+  });
+};
+
+/**
+ * Cette fonction s'assure du respect des 3 points suivants:
+ * - Le report est totalement graduel
+ * - Pas de doublons
+ * - Pas de sauts interdits (> 3)
+ */
+export const isReportSafe = (report) => {
+  const reportJoined = report.join();
+
+  const sortedAsc = [...report].sort((a, b) => a - b);
+  const sortedDesc = [...report].sort((a, b) => b - a);
+
+  const isReportFullyGradual =
+    sortedAsc.join() === reportJoined || sortedDesc.join() === reportJoined;
+
+  //Décompte des doublons
+  const set = new Set(sortedAsc);
+  const countDuplicates = sortedAsc.length - set.size;
+
+  return (
+    !countDuplicates && isReportFullyGradual && !hasReportForbiddenJumps(report)
+  );
+};
+
 const countSafeReports = (reports: number[][]) => {
-  const count = reports.filter((report) => {
-    const hasDuplicateNumbers = reportContainsDuplicateNumbers(report);
-
-    //Inutile d'aller plus loin, dans tout les cas le report ne peut pas etre safe
-    if (hasDuplicateNumbers) {
-      return false;
+  return reports.filter((report) => {
+    if (!isReportSafe(report)) {
+      return TOLERANCE && isReportSafeAfterCleaning(report);
     }
-
-    const way = getReportWay(report);
-
-    const sortedReport = getSortedReport(report, way);
-
-    const isOneWay = isReportOneWay(sortedReport, report);
-
-    if (!isOneWay) {
-      return false;
-    }
-
-    return doLevelsRespectsMaxIncrease(sortedReport);
-  });
-
-  return count.length;
+    return isReportSafe(report);
+  }).length;
 };
 
-const file: string = fs.readFileSync(`${__dirname}/input.txt`, 'utf8');
-const stringReports = file.split('\n');
-
-//Suppression de la dernière ligne du fichier
-if (stringReports[stringReports.length - 1] === '') {
-  stringReports.pop();
-}
-
-const reports = stringReports.map((report) =>
-  report.split(' ').map((stringLevel) => Number.parseInt(stringLevel)),
-);
-
+const reports = getReportsFromInputFile();
 const count = countSafeReports(reports);
 console.log(count);
